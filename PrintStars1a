@@ -1,0 +1,35 @@
+public class PrintStars1a {
+  public static void main(String[] args) {
+    int row = 1;
+    
+    for (int column = 1; column <= row; column++) {
+      System.out.print("*");
+    }
+    System.out.println();
+    row++;
+    for (int column = 1; column <= row; column++) {
+      System.out.print("*");
+    }
+    System.out.println();
+    row++;
+    for (int column = 1; column <= row; column++) {
+      System.out.print("*");
+    }
+    System.out.println();
+    row++;
+    for (int column = 1; column <= row; column++) {
+      System.out.print("*");
+    }
+    System.out.println();
+    row++;
+    for (int column = 1; column <= row; column++) {
+      System.out.print("*");
+    }
+    System.out.println();
+    row++;
+    for (int column = 1; column <= row; column++) {
+      System.out.print("*");
+    }
+    System.out.println();
+  }
+}
