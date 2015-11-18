@@ -1,0 +1,8 @@
+public class SpellingChequer {
+  public static void main(String[] args){
+    System.out.println("Eye halve a spelling chequer ");
+    System.out.println("It came with my pea sea");
+    System.out.println("It plainly marques four my revue");
+    System.out.println("Miss steaks eye kin knot sea.");
+  }
+}
