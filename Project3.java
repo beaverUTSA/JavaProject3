@@ -26,7 +26,7 @@ public class Project3 { //Below are all the class constants, and class variables
   public static final int SCORES_Y = 50;
   public static final Color SCORE_COLOR = Color.BLUE;
   public static final int SCORES_FONT_SIZE = 30;
-  public static final int MAX_SCORES = 1;
+  public static final int MAX_SCORES = 5;
   public static final int MIN_X_VELOCITY = 3;
   public static final int MAX_X_VELOCITY = 6;
   public static final int MIN_Y_VELOCITY = -5;
@@ -48,9 +48,13 @@ public class Project3 { //Below are all the class constants, and class variables
   public static int pauseY;
   public static int pause = 1;
   public static boolean scoresDisplayed = false;
-  public static int[] userScores = new int[10];
-  public static int[] computerScores = new int[10];
+  public static int[] userScores = new int[11];
+  public static int[] computerScores = new int[11];
   public static int gameCount = 0;
+  public static int boxWidth = 150;
+  public static int boxHeight = 0;
+  public static int totalComp =0;
+  public static int totalUser =0;
   
   public static void main(String[] args) { // This sets the initial variables, draws the graphics, then starts the game
     DrawingPanel panel = new DrawingPanel(PANEL_WIDTH, PANEL_HEIGHT);
@@ -70,7 +74,7 @@ public class Project3 { //Below are all the class constants, and class variables
     drawComputerPaddle(g, PADDLE_COLOR);
     startGame(panel, g);
   }
-  public static void startGame(DrawingPanel panel, Graphics g) { //This loop uses other methods to deal with user input, ball movement, hit detection, and the computer controlled paddle
+  public static void startGame(DrawingPanel panel, Graphics g) { //This loop uses other methods to deal with user input, ball movement, hit detection, the computer controlled paddle, the scoring rules and game functionality
     while(!gameOver) {
       handleKeys(panel,g);
       moveBall(g);
@@ -89,21 +93,23 @@ public class Project3 { //Below are all the class constants, and class variables
           g.setFont(scoreFont);
           g.setColor(PADDLE_COLOR);
           g.drawString("COMPUTER WINS", PANEL_WIDTH/4,PANEL_HEIGHT/3-50);
+          totalComp++;
         }
         if (userScore == MAX_SCORES){
           g.setFont(scoreFont);
           g.setColor(PADDLE_COLOR);
           g.drawString("USER WINS", PANEL_WIDTH/3,PANEL_HEIGHT/3-50);
+          totalUser++;
         }
         userScores[gameCount] = userScore;
         computerScores[gameCount] = computerScore;
         gameCount++;
         gameOver = true;
       }
-      if (gameCount == 9){
+      if (gameCount == 10){
         gameCount = 0;
-        userScores = new int[10];
-        computerScores = new int[10];
+        userScores = new int[11];
+        computerScores = new int[11];
       }
     }
     while(gameOver){
@@ -145,8 +151,8 @@ public class Project3 { //Below are all the class constants, and class variables
       if(gameOver){
         g.setFont(scoreFont);
         g.setColor(BACKGROUND_COLOR);
-        g.drawString("USER WINS", PANEL_WIDTH/3,PANEL_HEIGHT/3);
-        g.drawString("COMPUTER WINS", PANEL_WIDTH/4,PANEL_HEIGHT/3);
+        g.drawString("USER WINS", PANEL_WIDTH/3,PANEL_HEIGHT/3-50);
+        g.drawString("COMPUTER WINS", PANEL_WIDTH/4,PANEL_HEIGHT/3-50);
         drawScores(g,BACKGROUND_COLOR);
         computerScore = 0;
         userScore = 0;
@@ -163,13 +169,16 @@ public class Project3 { //Below are all the class constants, and class variables
         ballVelocityY = 0;
         panel.sleep(SLEEP_TIME);
         g.setColor(PADDLE_COLOR);
-        g.drawRect(PANEL_WIDTH/3, PANEL_HEIGHT/3, PANEL_WIDTH/3, PANEL_HEIGHT/3);
-        for (int i = gameCount; i >= 0; i--){
+        for (int i = gameCount-1; i >= 0; i--){
           g.setFont(normalFont);
           g.setColor(PADDLE_COLOR);
-          g.drawString("" + userScores[i],PANEL_WIDTH*3/5, PANEL_HEIGHT/3 + 15*i + 15);
-          g.drawString("" + userScores[i],PANEL_WIDTH*3/5, PANEL_HEIGHT/3 + 15*i + 15);
-          g.drawString("" + computerScores[i],PANEL_WIDTH/3 + 25, PANEL_HEIGHT/3 + 15*i +15);
+          g.drawRect(PANEL_WIDTH/3, PANEL_HEIGHT/3, (PANEL_WIDTH-boxWidth)/2, PANEL_HEIGHT/3 + 15*i -100);
+          g.drawString("Computer", PANEL_WIDTH/3, PANEL_HEIGHT/3);
+          g.drawString("User", (PANEL_WIDTH+3*boxWidth)/3, PANEL_HEIGHT/3);
+          g.drawString("" + userScores[i],PANEL_WIDTH*3/5, PANEL_HEIGHT/3 + 15*i + 30);
+          g.drawString("" + computerScores[i],PANEL_WIDTH/3 + 25, PANEL_HEIGHT/3 + 15*i + 30);
+          g.drawString("Wins: "+totalUser,(PANEL_WIDTH+3*boxWidth)/3-15, PANEL_HEIGHT/3+15);
+          g.drawString("Wins: "+totalComp,PANEL_WIDTH/3+1, PANEL_HEIGHT/3+15);
         }
         scoresDisplayed = true;
       }
@@ -177,12 +186,10 @@ public class Project3 { //Below are all the class constants, and class variables
         ballVelocityX = pauseX;
         ballVelocityY = pauseY;
         g.setColor(BACKGROUND_COLOR);
-        g.fillRect(PANEL_WIDTH/3, PANEL_HEIGHT/3, PANEL_WIDTH/3+50, PANEL_HEIGHT/3+50);
-        
+        g.fillRect(PANEL_WIDTH/3, PANEL_HEIGHT/3 -15, (PANEL_WIDTH-boxWidth)/2+2, PANEL_HEIGHT);
         scoresDisplayed = false;
       }
-      
-  }
+    }
   }
   public static void movePaddle(Graphics g, int amount) { // this moves the paddle by the given parameter amount
     drawPaddle(g, BACKGROUND_COLOR);
@@ -193,7 +200,7 @@ public class Project3 { //Below are all the class constants, and class variables
       paddleY = PANEL_HEIGHT - PADDLE_LENGTH;
     drawPaddle(g,PADDLE_COLOR);
   }
-  public static void detectHit() { // this bounces the ball of the paddles and the top and bottom of the window
+  public static void detectHit() { // this bounces the ball of the paddles and the top and bottom of the window, and changes the speed depending on impact vector
     if ((ballVelocityX > 0) &&
         (ballY + BALL_SIZE/2 >= paddleY) &&
         (ballY - BALL_SIZE/2 <= paddleY + PADDLE_LENGTH) &&
@@ -244,18 +251,18 @@ public class Project3 { //Below are all the class constants, and class variables
     }
     drawComputerPaddle(g,PADDLE_COLOR);
   }
-  public static void drawScores(Graphics g, Color c) {
+  public static void drawScores(Graphics g, Color c) { //this draws the scores in a certain parameter color
     g.setFont(scoreFont);
     g.setColor(c);
     g.drawString("" + userScore,USER_SCORE_X,SCORES_Y);
     g.drawString("" + computerScore,COMPUTER_SCORE_X,SCORES_Y);
   }
-  public static void addToComputerScore(Graphics g) {
+  public static void addToComputerScore(Graphics g) { //this updates the computers score
     drawScores(g,BACKGROUND_COLOR);
     computerScore++;
     drawScores(g,SCORE_COLOR);
   }
-  public static void addToUserScore(Graphics g) {
+  public static void addToUserScore(Graphics g) {  //this updates the user score
     drawScores(g,BACKGROUND_COLOR);
     userScore++;
     drawScores(g,SCORE_COLOR);
