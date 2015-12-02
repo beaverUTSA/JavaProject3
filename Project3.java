@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.util.*;
 public class Project3 { //Below are all the class constants, and class variables, this program as a whole makes a pong game with a user controlled paddle and computer controlled competition
   public static final int PANEL_WIDTH = 500;
   public static final int PANEL_HEIGHT = 400;
@@ -17,6 +18,8 @@ public class Project3 { //Below are all the class constants, and class variables
   public static final int UP_ARROW = 38;
   public static final int DOWN_ARROW = 40;
   public static final int KEY_SPACE = ' ';
+  public static final int KEY_NEW_GAME = 'N';
+  public static final int KEY_SCORES = 'S';
   public static final int PADDLE_MOVE_AMOUNT = 5;
   public static final int COMPUTER_SCORE_X = PANEL_WIDTH/3;
   public static final int USER_SCORE_X = PANEL_WIDTH*2/3;
@@ -24,6 +27,10 @@ public class Project3 { //Below are all the class constants, and class variables
   public static final Color SCORE_COLOR = Color.BLUE;
   public static final int SCORES_FONT_SIZE = 30;
   public static final int MAX_SCORES = 1;
+  public static final int MIN_X_VELOCITY = 3;
+  public static final int MAX_X_VELOCITY = 6;
+  public static final int MIN_Y_VELOCITY = -5;
+  public static final int MAX_Y_VELOCITY = 5;
   public static int ballX;
   public static int ballY;
   public static int ballVelocityX;
@@ -34,6 +41,16 @@ public class Project3 { //Below are all the class constants, and class variables
   public static int userScore = 0;
   public static Font normalFont;
   public static Font scoreFont;
+  public static Random r = new Random();
+  public static int chance;
+  public static boolean gameOver = false;
+  public static int pauseX;
+  public static int pauseY;
+  public static int pause = 1;
+  public static boolean scoresDisplayed = false;
+  public static int[] userScores = new int[10];
+  public static int[] computerScores = new int[10];
+  public static int gameCount = 0;
   
   public static void main(String[] args) { // This sets the initial variables, draws the graphics, then starts the game
     DrawingPanel panel = new DrawingPanel(PANEL_WIDTH, PANEL_HEIGHT);
@@ -54,21 +71,44 @@ public class Project3 { //Below are all the class constants, and class variables
     startGame(panel, g);
   }
   public static void startGame(DrawingPanel panel, Graphics g) { //This loop uses other methods to deal with user input, ball movement, hit detection, and the computer controlled paddle
-    while(true) {
+    while(!gameOver) {
       handleKeys(panel,g);
       moveBall(g);
       detectHit();
       drawPaddle(g, PADDLE_COLOR);
+      drawScores(g,SCORE_COLOR);
       g.setFont(normalFont);
+      g.setColor(PADDLE_COLOR);
       g.drawString("Project 3 Brian Biever",10,15);
       moveComputerPaddle(g);
-      panel.sleep(SLEEP_TIME);
+      panel.sleep(SLEEP_TIME); 
       if (userScore == MAX_SCORES || computerScore == MAX_SCORES) {
         ballVelocityX = 0;
         ballVelocityY = 0;
-        g.setFont(scoreFont);
-        g.drawString("GAME OVER", PANEL_WIDTH/3,PANEL_HEIGHT/3);
+        if (computerScore == MAX_SCORES){
+          g.setFont(scoreFont);
+          g.setColor(PADDLE_COLOR);
+          g.drawString("COMPUTER WINS", PANEL_WIDTH/4,PANEL_HEIGHT/3-50);
+        }
+        if (userScore == MAX_SCORES){
+          g.setFont(scoreFont);
+          g.setColor(PADDLE_COLOR);
+          g.drawString("USER WINS", PANEL_WIDTH/3,PANEL_HEIGHT/3-50);
+        }
+        userScores[gameCount] = userScore;
+        computerScores[gameCount] = computerScore;
+        gameCount++;
+        gameOver = true;
       }
+      if (gameCount == 9){
+        gameCount = 0;
+        userScores = new int[10];
+        computerScores = new int[10];
+      }
+    }
+    while(gameOver){
+      handleKeys(panel,g);
+      panel.sleep(SLEEP_TIME);
     }
   }
   public static void drawBall(Graphics g, Color c) { // this draws the ball of a certain size with a parameter color
@@ -101,6 +141,48 @@ public class Project3 { //Below are all the class constants, and class variables
       movePaddle(g,PADDLE_MOVE_AMOUNT);
     else if (keyCode == KEY_SPACE)
       resetBall(g);
+    else if (keyCode == KEY_NEW_GAME){
+      if(gameOver){
+        g.setFont(scoreFont);
+        g.setColor(BACKGROUND_COLOR);
+        g.drawString("USER WINS", PANEL_WIDTH/3,PANEL_HEIGHT/3);
+        g.drawString("COMPUTER WINS", PANEL_WIDTH/4,PANEL_HEIGHT/3);
+        drawScores(g,BACKGROUND_COLOR);
+        computerScore = 0;
+        userScore = 0;
+        drawScores(g,SCORE_COLOR);
+        gameOver = false;
+        startGame(panel, g);
+      }
+    }else if (keyCode == KEY_SCORES){
+      pause = -pause;
+      if(pause < 0){
+        pauseX = ballVelocityX;
+        pauseY = ballVelocityY;
+        ballVelocityX = 0;
+        ballVelocityY = 0;
+        panel.sleep(SLEEP_TIME);
+        g.setColor(PADDLE_COLOR);
+        g.drawRect(PANEL_WIDTH/3, PANEL_HEIGHT/3, PANEL_WIDTH/3, PANEL_HEIGHT/3);
+        for (int i = gameCount; i >= 0; i--){
+          g.setFont(normalFont);
+          g.setColor(PADDLE_COLOR);
+          g.drawString("" + userScores[i],PANEL_WIDTH*3/5, PANEL_HEIGHT/3 + 15*i + 15);
+          g.drawString("" + userScores[i],PANEL_WIDTH*3/5, PANEL_HEIGHT/3 + 15*i + 15);
+          g.drawString("" + computerScores[i],PANEL_WIDTH/3 + 25, PANEL_HEIGHT/3 + 15*i +15);
+        }
+        scoresDisplayed = true;
+      }
+      if(pause > 0) {
+        ballVelocityX = pauseX;
+        ballVelocityY = pauseY;
+        g.setColor(BACKGROUND_COLOR);
+        g.fillRect(PANEL_WIDTH/3, PANEL_HEIGHT/3, PANEL_WIDTH/3+50, PANEL_HEIGHT/3+50);
+        
+        scoresDisplayed = false;
+      }
+      
+  }
   }
   public static void movePaddle(Graphics g, int amount) { // this moves the paddle by the given parameter amount
     drawPaddle(g, BACKGROUND_COLOR);
@@ -116,14 +198,23 @@ public class Project3 { //Below are all the class constants, and class variables
         (ballY + BALL_SIZE/2 >= paddleY) &&
         (ballY - BALL_SIZE/2 <= paddleY + PADDLE_LENGTH) &&
         (ballX + BALL_SIZE/2 >= PADDLE_X) &&
-        (ballX - BALL_SIZE/2 <= PADDLE_X))
+        (ballX - BALL_SIZE/2 <= PADDLE_X)){
       ballVelocityX = -ballVelocityX;
+      if(((paddleY + PADDLE_LENGTH/2) - ballY)>=8){
+        ballVelocityY += (((paddleY + PADDLE_LENGTH/2) - ballY)/8);
+      }
+      if(((paddleY + PADDLE_LENGTH/2) - ballY)<=-8){
+        ballVelocityY -= (((paddleY + PADDLE_LENGTH/2) - ballY)/8);
+      }
+    }
     if ((ballVelocityX < 0) &&
         (ballY + BALL_SIZE/2 >= compPaddleY) &&
         (ballY - BALL_SIZE/2 <= compPaddleY + COMP_PADDLE_LENGTH) &&
         (ballX + BALL_SIZE/2 >= COMP_PADDLE_X) &&
-        (ballX - BALL_SIZE/2 <= COMP_PADDLE_X))
+        (ballX - BALL_SIZE/2 <= COMP_PADDLE_X)){
       ballVelocityX = -ballVelocityX;
+      ballVelocityX++;
+    }
     if ((ballVelocityY < 0) && 
         (ballY - BALL_SIZE/2 <= 0))
       ballVelocityY = -ballVelocityY;
@@ -135,8 +226,10 @@ public class Project3 { //Below are all the class constants, and class variables
     drawBall(g,BACKGROUND_COLOR);
     ballX = PANEL_WIDTH/2;
     ballY = PANEL_HEIGHT/2;
-    ballVelocityX = INITIAL_BALL_VELOCITY_X;
-    ballVelocityY = INITIAL_BALL_VELOCITY_Y;
+    chance = r.nextInt(4);
+    ballVelocityX = chance + MIN_X_VELOCITY;
+    chance = r.nextInt(10);
+    ballVelocityY = chance + MIN_Y_VELOCITY;
   }
   public static void drawComputerPaddle(Graphics g, Color c) { // this draws the computers paddle in a certain parameter color
     g.setColor(c);
